@@ -53,6 +53,8 @@ button{background:#202544;color:#fff0ca;border-color:#c2b9eb55}button:hover{back
 main{backdrop-filter:none}
 .cloud{animation:none}
 </style>
+<link rel="stylesheet" href="assets/responsive.css">
+<script src="assets/responsive.js" defer></script>
 </head>
 <body>
 <audio id="background-music" src="oli.mp3" loop preload="auto"></audio>
@@ -108,6 +110,9 @@ const container=document.getElementById('floating-moons');
 const canvas=document.getElementById('fireworks'),ctx=canvas.getContext('2d');
 const symbols=['🌙','🌛','🌜','🌕'];
 const pointer={x:0,y:0,active:false};
+const compact=matchMedia('(max-width: 600px), (pointer: coarse)');
+const moonLimit=()=>compact.matches?10:18;
+const sparkLimit=()=>compact.matches?65:120;
 addEventListener('pointermove',event=>{
  pointer.x=event.clientX;pointer.y=event.clientY;pointer.active=true;
 },{passive:true});
@@ -125,7 +130,7 @@ function resizeSky(){
  stars=Array.from({length:45},()=>({x:Math.random()*width,y:Math.random()*height,r:.4+Math.random()*1.3,phase:Math.random()*7}));
 }
 function spark(x,y,vx,vy,hue=43){
- if(sparks.length>=120)return;
+ if(sparks.length>=sparkLimit())return;
  sparks.push({x,y,vx,vy,age:0,life:.7+Math.random()*1.1,hue});
 }
 function burst(x=Math.random()*width,y=height*(.1+Math.random()*.5),count=18){
@@ -133,7 +138,7 @@ function burst(x=Math.random()*width,y=height*(.1+Math.random()*.5),count=18){
  for(let i=0;i<count;i++){const angle=Math.PI*2*i/count,speed=40+Math.random()*130;spark(x,y,Math.cos(angle)*speed,Math.sin(angle)*speed,hue)}
 }
 function createMoon(initial=false){
- if(moons.length>=18)return;
+ if(moons.length>=moonLimit())return;
  const el=document.createElement('div');el.className='moon-emoji';
  el.textContent=symbols[Math.floor(Math.random()*symbols.length)];
  const size=30+Math.random()*24;el.style.fontSize=size+'px';container.appendChild(el);
@@ -159,7 +164,7 @@ function drawSky(time){
     }
     moon.el.remove();moon.dead=true;continue;
    }
-   if(distance<400){
+   if(distance<(compact.matches?220:400)){
     moon.vx+=dx/Math.max(distance,1)*300*dt;
     moon.vy+=dy/Math.max(distance,1)*300*dt;
    }
@@ -190,7 +195,7 @@ function drawSky(time){
 function animateSky(){
  cancelAnimationFrame(frame);container.replaceChildren();moons=[];sparks=[];ctx.clearRect(0,0,width,height);
  if(document.hidden)return;
- for(let i=0;i<16;i++)createMoon(true);
+ for(let i=0;i<Math.min(16,moonLimit());i++)createMoon(true);
  last=performance.now();spawn=0;nextBurst=last+1000;frame=requestAnimationFrame(drawSky);
 }
 addEventListener('resize',resizeSky);reduced.addEventListener('change',animateSky);

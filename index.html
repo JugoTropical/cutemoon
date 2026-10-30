@@ -105,7 +105,7 @@
             font-size: 2rem;
             text-align: center;
         }
-    
+
 body{min-height:100svh;overflow:hidden;background:#080d20 url('assets/cielo-luna-espaldas-personal.webp') center/cover no-repeat}
 .background-scene{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s ease;pointer-events:none}
 .background-scene.active{opacity:1}
@@ -139,8 +139,8 @@ body{min-height:100svh;overflow:hidden;background:#080d20 url('assets/cielo-luna
             from{transform:translateY(2px) scale(.95,.8);opacity:.7}
             to{transform:translateY(-4px) scale(1.06,1.14);opacity:1}
         }
-        
-    
+
+
         #startButton .flame {
             position:absolute;bottom:5px;width:13px;height:29px;pointer-events:none;
             z-index:-1;border-radius:70% 30% 65% 35%;
@@ -155,8 +155,10 @@ body{min-height:100svh;overflow:hidden;background:#080d20 url('assets/cielo-luna
             100%{transform:translateY(-44px) rotate(16deg) scale(.2,.4);opacity:0}
         }
     </style>
+<link rel="stylesheet" href="assets/responsive.css">
+<script src="assets/responsive.js" defer></script>
 </head>
-<body>
+<body class="home">
 <img class="background-scene" id="scene-front" src="assets/cielo-luna-cuerpo-completo-personal.webp" alt="" aria-hidden="true">
 <img class="background-scene" id="scene-close" src="assets/cielo-luna-retrato-personal.webp" alt="" aria-hidden="true">
     <div class="start-screen" id="startScreen">
@@ -166,7 +168,7 @@ body{min-height:100svh;overflow:hidden;background:#080d20 url('assets/cielo-luna
     </div>
     <div class="heart-container" id="heart" role="button" tabindex="0" aria-label="Haz clic en el corazón para continuar"></div>
     <div class="message" id="message">¡Oh no! 😢</div>
-    <audio id="background-music" loop>
+    <audio preload="none" id="background-music" loop>
         <source src="test1.mp3" type="audio/mpeg">
         Tu navegador no soporta la reproducción de audio.
     </audio>
@@ -193,7 +195,7 @@ body{min-height:100svh;overflow:hidden;background:#080d20 url('assets/cielo-luna
             startButton.appendChild(flame);
         }
         const message = document.getElementById('message');
-        
+
         let clickCount = 0; // Contador de clics en la pantalla
         const audioFiles = ["b.mp3", "c.mp3", "d.mp3"]; // Archivos de audio
 
@@ -203,11 +205,11 @@ body{min-height:100svh;overflow:hidden;background:#080d20 url('assets/cielo-luna
             const b = Math.floor(Math.random() * 100 + 155);
             return `rgb(${r}, ${g}, ${b})`;
         }
-        
+
         function createHeart(size) {
             document.documentElement.style.setProperty('--size', `${size}px`);
             heartContainer.innerHTML = '';
-            
+
             heartPattern.forEach(row => {
                 row.forEach(pixel => {
                     const div = document.createElement('div');
@@ -215,9 +217,7 @@ body{min-height:100svh;overflow:hidden;background:#080d20 url('assets/cielo-luna
                     if (pixel === 1) {
                         div.classList.add('filled');
                         div.style.backgroundColor = getRandomColor();
-                        setInterval(() => {
-                            div.style.backgroundColor = getRandomColor();
-                        }, 2000);
+
                         div.style.animationDelay = `${Math.random()}s`;
                     } else {
                         div.style.opacity = '0';
@@ -226,15 +226,16 @@ body{min-height:100svh;overflow:hidden;background:#080d20 url('assets/cielo-luna
                     heartContainer.appendChild(div);
                 });
             });
-            
+
             // Crear el efecto ghost y mostrarlo
             const ghost = heartContainer.cloneNode(true);
             ghost.classList.add('ghost');
+            ghost.removeAttribute('id');ghost.setAttribute('aria-hidden','true');
             ghost.removeAttribute('id');ghost.removeAttribute('role');ghost.removeAttribute('tabindex');ghost.setAttribute('aria-hidden','true');
-            document.body.appendChild(ghost);
+            heartContainer.appendChild(ghost);
             ghost.style.display = 'block'; // Mostrar el efecto ghost
         }
-        
+
         startButton.addEventListener('click', () => {
             startScreen.style.display = 'none'; // Ocultar la pantalla inicial
             heartContainer.style.display = 'grid'; // Mostrar el corazón
@@ -243,7 +244,7 @@ body{min-height:100svh;overflow:hidden;background:#080d20 url('assets/cielo-luna
                 console.log("La reproducción automática fue bloqueada. Haz clic para reproducir.");
             });
         });
-        
+
         noButton.addEventListener('click', () => {
             startScreen.style.display = 'none'; // Ocultar la pantalla inicial
             message.style.display = 'block'; // Mostrar el mensaje "¡Oh no! 😢"
