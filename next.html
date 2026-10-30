@@ -107,6 +107,13 @@ button.addEventListener('click',()=>{if(audio.paused)playMusic();else audio.paus
 const container=document.getElementById('floating-moons');
 const canvas=document.getElementById('fireworks'),ctx=canvas.getContext('2d');
 const symbols=['🌙','🌛','🌜','🌕'];
+const pointer={x:0,y:0,active:false};
+addEventListener('pointermove',event=>{
+ pointer.x=event.clientX;pointer.y=event.clientY;pointer.active=true;
+},{passive:true});
+document.documentElement.addEventListener('pointerleave',()=>{pointer.active=false});
+addEventListener('blur',()=>{pointer.active=false});
+addEventListener('pointerup',event=>{if(event.pointerType!=='mouse')pointer.active=false},{passive:true});
 const glow=document.createElement('canvas');glow.width=24;glow.height=24;
 const glowContext=glow.getContext('2d'),glowGradient=glowContext.createRadialGradient(12,12,0,12,12,12);
 glowGradient.addColorStop(0,'#fff8dc');glowGradient.addColorStop(.25,'#ffe6a899');glowGradient.addColorStop(1,'#ffe6a800');
@@ -130,7 +137,7 @@ function createMoon(initial=false){
  const el=document.createElement('div');el.className='moon-emoji';
  el.textContent=symbols[Math.floor(Math.random()*symbols.length)];
  const size=30+Math.random()*24;el.style.fontSize=size+'px';container.appendChild(el);
- const moon={el,x:Math.random()*width,y:initial?Math.random()*height:-65,vx:-12+Math.random()*24,vy:50+Math.random()*60,size,angle:Math.random(),spin:(Math.random()-.5)*.6,trail:0};
+ const moon={el,x:Math.random()*width,y:initial?Math.random()*height:-65,vx:-12+Math.random()*24,vy:50+Math.random()*60,size,attracted:Math.random()<.35,angle:Math.random(),spin:(Math.random()-.5)*.6,trail:0};
  el.style.transform='translate('+moon.x+'px,'+moon.y+'px)';moons.push(moon);
 }
 function drawSky(time){
@@ -142,7 +149,25 @@ function drawSky(time){
  }
  spawn+=dt;if(spawn>.6){createMoon();spawn=0}
  for(const moon of moons){
-  moon.vy=Math.min(moon.vy+5*dt,145);moon.x+=moon.vx*dt;moon.y+=moon.vy*dt;moon.angle+=moon.spin*dt;
+  if(pointer.active&&moon.attracted){
+   const dx=pointer.x-(moon.x+moon.size/2),dy=pointer.y-(moon.y+moon.size/2);
+   const distance=Math.hypot(dx,dy);
+   if(distance<moon.size*.5+12){
+    for(let i=0;i<28;i++){
+     const angle=Math.PI*2*i/28,speed=65+Math.random()*125;
+     spark(pointer.x,pointer.y,Math.cos(angle)*speed,Math.sin(angle)*speed,i*360/28);
+    }
+    moon.el.remove();moon.dead=true;continue;
+   }
+   if(distance<400){
+    moon.vx+=dx/Math.max(distance,1)*300*dt;
+    moon.vy+=dy/Math.max(distance,1)*300*dt;
+   }
+  }
+  moon.vy=Math.min(moon.vy+5*dt,180);
+  const speed=Math.hypot(moon.vx,moon.vy);
+  if(speed>230){moon.vx*=230/speed;moon.vy*=230/speed}
+  moon.x+=moon.vx*dt;moon.y+=moon.vy*dt;moon.angle+=moon.spin*dt;
   moon.el.style.transform='translate('+moon.x+'px,'+moon.y+'px) rotate('+moon.angle+'rad)';
   moon.trail+=dt;
   if(moon.trail>.18){spark(moon.x+moon.size/2,moon.y+moon.size/2,(Math.random()-.5)*55,-25-Math.random()*45);moon.trail=0}
