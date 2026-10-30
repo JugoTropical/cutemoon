@@ -23,7 +23,7 @@ p{margin:0;font-size:clamp(1.1rem,2.8vw,1.4rem);line-height:1.85;text-wrap:prett
 button{margin-top:28px;padding:12px 22px;border:1px solid #e8dfee;border-radius:999px;background:#fff;color:#756184;font:inherit;font-size:.95rem;cursor:pointer}
 button:hover{background:#faf5ff}button:focus-visible{outline:3px solid #cbb7de;outline-offset:4px}
 #music-status{display:block;margin-top:10px;color:#887993;font-size:.85rem}
-@media(prefers-reduced-motion:reduce){.cloud,.moon-emoji,.moon-emoji span{animation:none}.moon-emoji{display:none}}
+@media(prefers-reduced-motion:reduce){.cloud,.moon-emoji,.moon-emoji span{animation:none}}
 
 body{background:radial-gradient(ellipse at 75% 15%,#292451 0%,#10162e 45%,#050817 100%);color:#f0edff}
 .sky{opacity:.75}.cloud{opacity:.2}
@@ -34,18 +34,19 @@ button{background:#202544;color:#fff0ca;border-color:#c2b9eb55}button:hover{back
 .moon-emoji:before{content:"";position:absolute;bottom:75%;left:48%;width:2px;height:90px;background:linear-gradient(transparent,#ffe9baaa);box-shadow:0 0 12px #ffe0a4;transform:rotate(18deg);transform-origin:bottom}
 @keyframes moonfall{0%{transform:translate(0,-40px) rotate(-15deg);opacity:0}10%,80%{opacity:.9}100%{transform:translate(-150px,calc(100vh + 160px)) rotate(25deg);opacity:0}}
 #fireworks{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
-@media(prefers-reduced-motion:reduce){#fireworks{display:none}}
+
 
 [hidden]{display:none!important}
 #open-message{position:relative;z-index:3;width:min(78vw,350px);aspect-ratio:1;padding:0;margin:40px 0;border:0;background:transparent;border-radius:50%;filter:drop-shadow(0 0 35px #ffdf8b66);transition:transform .3s}
 #open-message:hover{background:transparent;transform:scale(1.04)}
 #open-message svg{width:100%;height:100%;display:block}
 #open-message span{position:absolute;inset:0;display:grid;place-content:center;color:#53401e;font-size:clamp(1.2rem,5vw,1.6rem);line-height:1.5;text-shadow:0 1px 8px #fff9}
-.moon-emoji{top:0;left:0;bottom:auto;opacity:.95;animation:none!important;will-change:transform}
+.moon-emoji{top:0;left:0;bottom:auto;display:block!important;opacity:1;animation:none!important;will-change:transform}
 .moon-emoji:before{display:none}.moon-emoji span{animation:none}
 #message{animation:reveal .7s ease-out}
 @keyframes reveal{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){#message{animation:none}}
+.floating-moons{z-index:3}#open-message{z-index:4}main{z-index:4}
 </style>
 </head>
 <body>
@@ -118,7 +119,7 @@ function burst(x=Math.random()*width,y=height*(.1+Math.random()*.5),count=32){
 function createMoon(initial=false){
  const el=document.createElement('div');el.className='moon-emoji';
  el.textContent=symbols[Math.floor(Math.random()*symbols.length)];
- const size=22+Math.random()*24;el.style.fontSize=size+'px';container.appendChild(el);
+ const size=30+Math.random()*24;el.style.fontSize=size+'px';container.appendChild(el);
  const moon={el,x:Math.random()*width,y:initial?Math.random()*height:-65,vx:-12+Math.random()*24,vy:50+Math.random()*60,size,angle:Math.random(),spin:(Math.random()-.5)*.6,trail:0};
  el.style.transform='translate('+moon.x+'px,'+moon.y+'px)';moons.push(moon);
 }
@@ -128,7 +129,7 @@ function drawSky(time){
   ctx.globalAlpha=.4+.5*(.5+.5*Math.sin(time/1000+star.phase));ctx.fillStyle='#fff1d0';
   ctx.beginPath();ctx.arc(star.x,star.y,star.r,0,Math.PI*2);ctx.fill();
  }
- spawn+=dt;if(spawn>.3){createMoon();spawn=0}
+ spawn+=dt;if(spawn>.22){createMoon();spawn=0}
  for(const moon of moons){
   moon.vy=Math.min(moon.vy+5*dt,145);moon.x+=moon.vx*dt;moon.y+=moon.vy*dt;moon.angle+=moon.spin*dt;
   moon.el.style.transform='translate('+moon.x+'px,'+moon.y+'px) rotate('+moon.angle+'rad)';
@@ -151,8 +152,8 @@ function drawSky(time){
 }
 function animateSky(){
  cancelAnimationFrame(frame);container.replaceChildren();moons=[];sparks=[];ctx.clearRect(0,0,width,height);
- if(reduced.matches||document.hidden)return;
- for(let i=0;i<22;i++)createMoon(true);
+ if(document.hidden)return;
+ for(let i=0;i<38;i++)createMoon(true);
  last=performance.now();spawn=0;nextBurst=last+1000;frame=requestAnimationFrame(drawSky);
 }
 addEventListener('resize',resizeSky);reduced.addEventListener('change',animateSky);
