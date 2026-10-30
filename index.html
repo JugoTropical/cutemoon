@@ -139,8 +139,20 @@ body{min-height:100svh;overflow:hidden;background:#080d20 url('assets/cielo-luna
             from{transform:translateY(2px) scale(.95,.8);opacity:.7}
             to{transform:translateY(-4px) scale(1.06,1.14);opacity:1}
         }
-        @media(prefers-reduced-motion:reduce){
-            #startButton::before,#startButton::after{animation:none}
+        
+    
+        #startButton .flame {
+            position:absolute;bottom:5px;width:13px;height:29px;pointer-events:none;
+            z-index:-1;border-radius:70% 30% 65% 35%;
+            background:linear-gradient(to top,#ff4414 5%,#ff9b20 55%,#fff5a6 100%);
+            transform-origin:50% 100%;
+            animation:flameRise var(--speed) ease-in-out var(--delay) infinite;
+        }
+        @keyframes flameRise {
+            0%{transform:translateY(0) rotate(-12deg) scale(.75,.55);opacity:.6}
+            35%{transform:translateY(-18px) rotate(10deg) scale(1,1.3);opacity:1}
+            70%{transform:translateY(-31px) rotate(-8deg) scale(.65,1);opacity:.8}
+            100%{transform:translateY(-44px) rotate(16deg) scale(.2,.4);opacity:0}
         }
     </style>
 </head>
@@ -172,6 +184,14 @@ body{min-height:100svh;overflow:hidden;background:#080d20 url('assets/cielo-luna
         const startScreen = document.getElementById('startScreen');
         const startButton = document.getElementById('startButton');
         const noButton = document.getElementById('noButton');
+        for(let i=0;i<7;i++){
+            const flame=document.createElement('span');
+            flame.className='flame';flame.setAttribute('aria-hidden','true');
+            flame.style.left=(i*13-2)+'%';
+            flame.style.setProperty('--speed',(1+i%3*.18)+'s');
+            flame.style.setProperty('--delay',(-i*.21)+'s');
+            startButton.appendChild(flame);
+        }
         const message = document.getElementById('message');
         
         let clickCount = 0; // Contador de clics en la pantalla
