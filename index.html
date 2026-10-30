@@ -105,15 +105,26 @@
             font-size: 2rem;
             text-align: center;
         }
-    </style>
+    
+body{min-height:100svh;overflow:hidden;background:#080d20 url('assets/cielo-luna-colina.webp') center/cover no-repeat}
+.background-scene{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s ease;pointer-events:none}
+.background-scene.active{opacity:1}
+.start-screen,.heart-container,.message{z-index:2}
+.start-screen{padding:24px;border-radius:20px;background:#080d2077;text-shadow:0 2px 10px #000}
+.heart-container{cursor:pointer;touch-action:manipulation}
+.ghost{pointer-events:none;z-index:1}
+@media(prefers-reduced-motion:reduce){.background-scene{transition:none}}
+</style>
 </head>
 <body>
+<img class="background-scene" id="scene-front" src="assets/cielo-luna-cuerpo-completo-personal.webp" alt="" aria-hidden="true">
+<img class="background-scene" id="scene-close" src="assets/cielo-luna-retrato-personal.webp" alt="" aria-hidden="true">
     <div class="start-screen" id="startScreen">
         <h1>te gustaria explorar  que tanto podemos amar?</h1>
         <button id="startButton">Yes</button>
         <button id="noButton">No</button>
     </div>
-    <div class="heart-container" id="heart"></div>
+    <div class="heart-container" id="heart" role="button" tabindex="0" aria-label="Haz clic en el corazón para continuar"></div>
     <div class="message" id="message">¡Oh no! 😢</div>
     <audio id="background-music" loop>
         <source src="test1.mp3" type="audio/mpeg">
@@ -171,6 +182,7 @@
             // Crear el efecto ghost y mostrarlo
             const ghost = heartContainer.cloneNode(true);
             ghost.classList.add('ghost');
+            ghost.removeAttribute('id');ghost.removeAttribute('role');ghost.removeAttribute('tabindex');ghost.setAttribute('aria-hidden','true');
             document.body.appendChild(ghost);
             ghost.style.display = 'block'; // Mostrar el efecto ghost
         }
@@ -189,19 +201,22 @@
             message.style.display = 'block'; // Mostrar el mensaje "¡Oh no! 😢"
         });
 
-        // Función para manejar los clics en cualquier lugar de la pantalla
-        document.body.addEventListener('click', () => {
-            if (startScreen.style.display === 'none') { // Solo funciona si la pantalla inicial está oculta
-                clickCount++; // Incrementar el contador de clics
-                if (clickCount <= 3) {
-                    // Reproducir el archivo de audio correspondiente
-                    const audio = new Audio(audioFiles[clickCount - 1]);
-                    audio.play();
-                } else if (clickCount === 4) {
-                    // Redirigir a next.html al cuarto clic
-                    window.location.href = "next.html";
-                }
+        // Solo los clics en el corazón avanzan las escenas y los efectos.
+        function advanceHeart() {
+            if(heartContainer.style.display !== 'grid') return;
+            clickCount++;
+            if(clickCount === 1) document.getElementById('scene-front').classList.add('active');
+            if(clickCount === 2) document.getElementById('scene-close').classList.add('active');
+            if(clickCount <= 3) {
+                const effect = new Audio(audioFiles[clickCount - 1]);
+                effect.play().catch(()=>{});
+            } else if(clickCount === 4) {
+                window.location.href = 'next.html';
             }
+        }
+        heartContainer.addEventListener('click', advanceHeart);
+        heartContainer.addEventListener('keydown', event=>{
+            if(event.key==='Enter'||event.key===' '){event.preventDefault();advanceHeart();}
         });
     </script>
 </body>
