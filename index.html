@@ -114,7 +114,35 @@ body{min-height:100svh;overflow:hidden;background:#080d20 url('assets/cielo-luna
 .heart-container{cursor:pointer;touch-action:manipulation}
 .ghost{pointer-events:none;z-index:1}
 @media(prefers-reduced-motion:reduce){.background-scene{transition:none}}
-</style>
+
+        .start-screen button#startButton {
+            position:relative;isolation:isolate;overflow:visible;
+            background:linear-gradient(#ff9840,#e43c17);
+            border:1px solid #ffce78;box-shadow:0 0 16px #ff651c88;
+        }
+        #startButton::before,#startButton::after {
+            content:"";position:absolute;pointer-events:none;z-index:-1;
+            inset:-15px -8px -5px;border-radius:65% 45% 25% 25%;
+            background:
+                radial-gradient(ellipse at 20% 95%,#ffb52e 0%,#ff5a13 35%,transparent 65%),
+                radial-gradient(ellipse at 55% 85%,#fff2a0 0%,#ff9e25 30%,transparent 65%),
+                radial-gradient(ellipse at 85% 95%,#ffce54 0%,#ff521b 35%,transparent 65%);
+            transform-origin:center bottom;opacity:.85;
+            animation:buttonFlames 1.2s ease-in-out infinite alternate;
+        }
+        #startButton::after {
+            inset:-23px 3px -3px;opacity:.6;
+            animation:buttonFlames .85s ease-in-out -.4s infinite alternate-reverse;
+        }
+        .start-screen button#startButton:hover {background:linear-gradient(#ffb74c,#ee4c16)}
+        @keyframes buttonFlames {
+            from{transform:translateY(2px) scale(.95,.8);opacity:.7}
+            to{transform:translateY(-4px) scale(1.06,1.14);opacity:1}
+        }
+        @media(prefers-reduced-motion:reduce){
+            #startButton::before,#startButton::after{animation:none}
+        }
+    </style>
 </head>
 <body>
 <img class="background-scene" id="scene-front" src="assets/cielo-luna-cuerpo-completo-personal.webp" alt="" aria-hidden="true">
