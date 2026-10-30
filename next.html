@@ -24,6 +24,17 @@ button{margin-top:28px;padding:12px 22px;border:1px solid #e8dfee;border-radius:
 button:hover{background:#faf5ff}button:focus-visible{outline:3px solid #cbb7de;outline-offset:4px}
 #music-status{display:block;margin-top:10px;color:#887993;font-size:.85rem}
 @media(prefers-reduced-motion:reduce){.cloud,.moon-emoji,.moon-emoji span{animation:none}.moon-emoji{display:none}}
+
+body{background:radial-gradient(ellipse at 75% 15%,#292451 0%,#10162e 45%,#050817 100%);color:#f0edff}
+.sky{opacity:.75}.cloud{opacity:.2}
+main{background:rgba(10,16,39,.72);border-color:#c5c5ff30;box-shadow:0 20px 90px #0006,0 0 50px #ab8dff14}
+h1{color:#fff0ca;text-shadow:0 0 22px #e4c58155}.signature{color:#d6c4ef}
+button{background:#202544;color:#fff0ca;border-color:#c2b9eb55}button:hover{background:#33365a}#music-status{color:#ddd0ee}
+.moon-emoji{top:-90px;bottom:auto;animation:moonfall var(--duration) linear forwards;filter:drop-shadow(0 0 8px #ffe8a4) drop-shadow(0 0 22px #baa0ff)}
+.moon-emoji:before{content:"";position:absolute;bottom:75%;left:48%;width:2px;height:90px;background:linear-gradient(transparent,#ffe9baaa);box-shadow:0 0 12px #ffe0a4;transform:rotate(18deg);transform-origin:bottom}
+@keyframes moonfall{0%{transform:translate(0,-40px) rotate(-15deg);opacity:0}10%,80%{opacity:.9}100%{transform:translate(-150px,calc(100vh + 160px)) rotate(25deg);opacity:0}}
+#fireworks{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+@media(prefers-reduced-motion:reduce){#fireworks{display:none}}
 </style>
 </head>
 <body>
@@ -44,6 +55,7 @@ button:hover{background:#faf5ff}button:focus-visible{outline:3px solid #cbb7de;o
 <g class="cloud cloud-two"><use href="#cloud" transform="translate(-110 720) scale(2)" opacity=".9"/><use href="#cloud" transform="translate(1080 310) scale(1.35)" opacity=".7"/><use href="#cloud" transform="translate(470 850) scale(1.6)" opacity=".65"/></g>
 </svg>
 <div class="floating-moons" id="floating-moons" aria-hidden="true"></div>
+<canvas id="fireworks" aria-hidden="true"></canvas>
 <main>
 <div class="little-moon" aria-hidden="true">🌙</div>
 <h1>Qué bonito coincidir contigo</h1>
@@ -58,7 +70,7 @@ const symbols=['🌙','🌛','🌜','🌕'];
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 function createMoon(initial=false){
  const moon=document.createElement('div'),symbol=document.createElement('span');
- const duration=12+Math.random()*10;
+ const duration=5+Math.random()*5;
  moon.className='moon-emoji';symbol.textContent=symbols[Math.floor(Math.random()*symbols.length)];
  moon.style.left=Math.random()*100+'%';moon.style.fontSize=20+Math.random()*25+'px';
  moon.style.setProperty('--duration',duration+'s');
@@ -71,7 +83,7 @@ function updateAnimation(){
  clearInterval(interval);container.replaceChildren();
  if(reduced.matches||document.hidden)return;
  for(let i=0;i<14;i++)createMoon(true);
- interval=setInterval(()=>createMoon(),900);
+ interval=setInterval(()=>createMoon(),650);
 }
 reduced.addEventListener('change',updateAnimation);
 document.addEventListener('visibilitychange',updateAnimation);updateAnimation();
@@ -82,6 +94,51 @@ button.addEventListener('click',async()=>{
  try{await audio.play();button.textContent='⏸ Pausar música';button.setAttribute('aria-pressed','true');status.textContent=''}
  catch{status.textContent='No se pudo reproducir la música. Comprueba que oli.mp3 esté disponible.'}
 });
+
+/* Estrellas y destellos: lienzo independiente, sin bloquear los controles. */
+const canvas=document.getElementById('fireworks'),ctx=canvas.getContext('2d');
+let width=innerWidth,height=innerHeight,stars=[],sparks=[],frame,last=0,nextBurst=0;
+function resizeSky(){
+ width=innerWidth;height=innerHeight;
+ const ratio=Math.min(devicePixelRatio||1,2);
+ canvas.width=width*ratio;canvas.height=height*ratio;ctx.setTransform(ratio,0,0,ratio,0,0);
+ stars=Array.from({length:90},()=>({x:Math.random()*width,y:Math.random()*height,r:.4+Math.random()*1.3,phase:Math.random()*7}));
+}
+function burst(){
+ const x=width*(.08+Math.random()*.84),y=height*(.08+Math.random()*.65);
+ const hue=[42,265,195,320][Math.floor(Math.random()*4)];
+ for(let i=0;i<32;i++){
+  const angle=Math.PI*2*i/32,speed=35+Math.random()*80;
+  sparks.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:1.4+Math.random()*.6,age:0,hue});
+ }
+}
+function drawSky(time){
+ const dt=Math.min((time-last)/1000,.04);last=time;
+ ctx.clearRect(0,0,width,height);
+ for(const star of stars){
+  ctx.globalAlpha=.35+.55*(.5+.5*Math.sin(time/1000+star.phase));
+  ctx.fillStyle='#fff1d0';ctx.beginPath();ctx.arc(star.x,star.y,star.r,0,Math.PI*2);ctx.fill();
+ }
+ if(time>nextBurst){burst();nextBurst=time+1100+Math.random()*1300}
+ ctx.globalCompositeOperation='lighter';
+ sparks=sparks.filter(p=>p.age<p.life);
+ for(const p of sparks){
+  p.age+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=20*dt;
+  ctx.globalAlpha=Math.max(0,1-p.age/p.life);
+  ctx.strokeStyle='hsl('+p.hue+' 95% 78%)';ctx.lineWidth=1.5;
+  ctx.shadowBlur=9;ctx.shadowColor=ctx.strokeStyle;
+  ctx.beginPath();ctx.moveTo(p.x-p.vx*.035,p.y-p.vy*.035);ctx.lineTo(p.x,p.y);ctx.stroke();
+ }
+ ctx.shadowBlur=0;ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+ frame=requestAnimationFrame(drawSky);
+}
+function animateSky(){
+ cancelAnimationFrame(frame);ctx.clearRect(0,0,width,height);
+ if(reduced.matches||document.hidden)return;
+ last=performance.now();nextBurst=last+400;frame=requestAnimationFrame(drawSky);
+}
+addEventListener('resize',resizeSky);reduced.addEventListener('change',animateSky);
+document.addEventListener('visibilitychange',animateSky);resizeSky();animateSky();
 </script>
 </body>
 </html>
