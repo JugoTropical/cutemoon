@@ -1,77 +1,87 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia de Emoticonos</title>
-    <style>
-        body {
-            background-color: black;
-            margin: 0;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .emoji {
-            position: absolute;
-            top: -50px;
-            font-size: 2rem;
-            animation: fall linear infinite;
-        }
-        @keyframes fall {
-            to {
-                transform: translateY(100vh);
-                opacity: 0;
-            }
-        }
-        @keyframes sparkle {
-            0% { text-shadow: 0 0 5px rgba(255, 215, 0, 0.8), 0 0 10px rgba(255, 165, 0, 0.5); }
-            50% { text-shadow: 0 0 10px rgba(255, 255, 0, 1), 0 0 20px rgba(255, 140, 0, 0.7); }
-            100% { text-shadow: 0 0 5px rgba(255, 215, 0, 0.8), 0 0 10px rgba(255, 165, 0, 0.5); }
-        }
-        .emoji {
-            animation: fall linear infinite, sparkle 1s infinite alternate;
-        }
-        .center-text {
-            position: absolute;
-            color: white;
-            font-size: 3rem;
-            z-index: 10;
-            text-align: center;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aventuras contigo 🌙</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;min-height:100svh;overflow-x:hidden;background:#fff;color:#514867;font-family:Georgia,serif;display:grid;place-items:center}
+.sky,.floating-moons{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.sky{z-index:0}.floating-moons{z-index:1;overflow:hidden}
+.cloud{animation:drift 10s ease-in-out infinite alternate}.cloud-two{animation-delay:-5s}
+@keyframes drift{from{transform:translateX(-16px)}to{transform:translateX(16px)}}
+.moon-emoji{position:absolute;bottom:-80px;opacity:0;animation:float-up var(--duration) linear forwards;filter:drop-shadow(0 0 8px #f4d78888)}
+.moon-emoji span{display:block;animation:sway 3s ease-in-out infinite alternate}
+@keyframes float-up{0%{transform:translateY(0) rotate(-12deg);opacity:0}12%,75%{opacity:.65}100%{transform:translateY(calc(-100vh - 160px)) rotate(20deg);opacity:0}}
+@keyframes sway{from{transform:translateX(-14px)}to{transform:translateX(14px)}}
+main{position:relative;z-index:2;width:min(90%,720px);margin:70px auto;padding:clamp(24px,5vw,48px);text-align:center;border:1px solid #fff;border-radius:32px;background:rgba(255,255,255,.77);box-shadow:0 16px 70px #9b8ab51a;backdrop-filter:blur(8px)}
+.little-moon{font-size:3rem;margin-bottom:12px}
+h1{margin:0 0 24px;color:#756184;font-size:clamp(1.8rem,5vw,2.8rem);font-weight:normal}
+p{margin:0;font-size:clamp(1.1rem,2.8vw,1.4rem);line-height:1.85;text-wrap:pretty}
+.signature{margin-top:26px;color:#9b7da3;font-size:1.05rem}
+button{margin-top:28px;padding:12px 22px;border:1px solid #e8dfee;border-radius:999px;background:#fff;color:#756184;font:inherit;font-size:.95rem;cursor:pointer}
+button:hover{background:#faf5ff}button:focus-visible{outline:3px solid #cbb7de;outline-offset:4px}
+#music-status{display:block;margin-top:10px;color:#887993;font-size:.85rem}
+@media(prefers-reduced-motion:reduce){.cloud,.moon-emoji,.moon-emoji span{animation:none}.moon-emoji{display:none}}
+</style>
 </head>
 <body>
-    <!-- Elemento de audio para reproducir el MP3 -->
-    <audio id="background-music" src="oli.mp3"></audio>
-
-    <!-- Texto en el centro -->
-    <div class="center-text">estoy muy cansado  :(   y algo timido por el cansancio  no quiero repetir lo mismo te e escrito. pero  eres ultra especial para mi  y no encuentro las palabras para expresarlo  pero quisiera poder seguir conociendote y seguir compartiendo aventuras jutos   y crear una union que nada la pueda romper  me gustas por dentro y por fuera   muchote   es tanto lo que me gustaria decir me blokeo quiza por el cansancio  pero  de cora que quisiera tener algo serio con tigo  tu quieres?</div>
-
-    <script>
-        const emojis = ['😘', '🥰', '😍', '🫶', '🥺'];
-        function createEmoji() {
-            const emoji = document.createElement('div');
-            emoji.classList.add('emoji');
-            emoji.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-            emoji.style.left = Math.random() * 100 + 'vw';
-            emoji.style.fontSize = Math.random() * 2 + 1 + 'rem';
-            emoji.style.animationDuration = Math.random() * 3 + 2 + 's';
-            document.body.appendChild(emoji);
-            setTimeout(() => {
-                emoji.remove();
-            }, 6000);
-        }
-        setInterval(createEmoji, 200);
-
-        // Reproducir el audio al hacer clic en cualquier parte de la pantalla
-        document.addEventListener('click', () => {
-            const audio = document.getElementById('background-music');
-            audio.play();
-        });
-    </script>
+<audio id="background-music" src="oli.mp3" loop preload="none"></audio>
+<svg class="sky" viewBox="0 0 1440 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="moon-color" x2="1" y2="1"><stop stop-color="#fff5cf"/><stop offset="1" stop-color="#e9d8f1"/></linearGradient>
+<linearGradient id="cloud-color" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#eee8f7"/></linearGradient>
+<radialGradient id="halo"><stop stop-color="#f6e8ff" stop-opacity=".65"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<mask id="crescent" maskUnits="userSpaceOnUse" x="0" y="0" width="1440" height="1000"><rect width="1440" height="1000" fill="#000"/><circle cx="880" cy="340" r="265" fill="#fff"/><circle cx="1000" cy="240" r="245" fill="#000"/></mask>
+<g id="cloud"><path d="M20 110 C0 80 25 50 60 55 C60 10 125 -5 155 35 C185 10 235 25 240 65 C285 50 320 80 300 110Z" fill="url(#cloud-color)" stroke="#e8e0f0" stroke-width="2"/></g>
+<g id="star" fill="#dbc7a0"><path d="M0 -10 Q2 -2 10 0 Q2 2 0 10 Q-2 2 -10 0 Q-2 -2 0 -10"/></g>
+</defs>
+<circle cx="860" cy="350" r="460" fill="url(#halo)"/>
+<g mask="url(#crescent)"><circle cx="880" cy="340" r="265" fill="url(#moon-color)"/><g fill="#dac7df" opacity=".3"><circle cx="705" cy="335" r="24"/><circle cx="758" cy="470" r="40"/><circle cx="858" cy="550" r="19"/><circle cx="686" cy="405" r="12"/></g></g>
+<use href="#star" x="505" y="175"/><use href="#star" x="1110" y="530"/><use href="#star" x="390" y="440"/><use href="#star" x="1190" y="200"/><use href="#star" x="930" y="700"/>
+<g class="cloud"><use href="#cloud" transform="translate(125 220) scale(1.35)" opacity=".8"/><use href="#cloud" transform="translate(900 600) scale(1.8)" opacity=".85"/></g>
+<g class="cloud cloud-two"><use href="#cloud" transform="translate(-110 720) scale(2)" opacity=".9"/><use href="#cloud" transform="translate(1080 310) scale(1.35)" opacity=".7"/><use href="#cloud" transform="translate(470 850) scale(1.6)" opacity=".65"/></g>
+</svg>
+<div class="floating-moons" id="floating-moons" aria-hidden="true"></div>
+<main>
+<div class="little-moon" aria-hidden="true">🌙</div>
+<h1>Qué bonito coincidir contigo</h1>
+<p>Entre tantas aventuras en Aniimo, una de las cosas más bonitas ha sido conocerte. Me encanta jugar contigo, reírnos y descubrir cosas juntos; contigo, hasta una partida sencilla se convierte en un lindo recuerdo. Gracias por tu compañía y por hacer que siempre tenga ganas de volver a jugar. Espero que nos queden muchísimas aventuras y una amistad que siga creciendo dentro y fuera del juego. 🫶✨</p>
+<div class="signature">Por más aventuras juntos 🌙</div>
+<button id="music-button" type="button" aria-pressed="false">🎵 Reproducir música</button>
+<span id="music-status" role="status"></span>
+</main>
+<script>
+const container=document.getElementById('floating-moons');
+const symbols=['🌙','🌛','🌜','🌕'];
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+function createMoon(initial=false){
+ const moon=document.createElement('div'),symbol=document.createElement('span');
+ const duration=12+Math.random()*10;
+ moon.className='moon-emoji';symbol.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+ moon.style.left=Math.random()*100+'%';moon.style.fontSize=20+Math.random()*25+'px';
+ moon.style.setProperty('--duration',duration+'s');
+ if(initial)moon.style.animationDelay=-(Math.random()*duration)+'s';
+ moon.appendChild(symbol);container.appendChild(moon);
+ moon.addEventListener('animationend',()=>moon.remove(),{once:true});
+}
+let interval;
+function updateAnimation(){
+ clearInterval(interval);container.replaceChildren();
+ if(reduced.matches||document.hidden)return;
+ for(let i=0;i<14;i++)createMoon(true);
+ interval=setInterval(()=>createMoon(),900);
+}
+reduced.addEventListener('change',updateAnimation);
+document.addEventListener('visibilitychange',updateAnimation);updateAnimation();
+const audio=document.getElementById('background-music'),button=document.getElementById('music-button'),status=document.getElementById('music-status');
+audio.volume=.45;
+button.addEventListener('click',async()=>{
+ if(!audio.paused){audio.pause();button.textContent='🎵 Reproducir música';button.setAttribute('aria-pressed','false');return}
+ try{await audio.play();button.textContent='⏸ Pausar música';button.setAttribute('aria-pressed','true');status.textContent=''}
+ catch{status.textContent='No se pudo reproducir la música. Comprueba que oli.mp3 esté disponible.'}
+});
+</script>
 </body>
 </html>
