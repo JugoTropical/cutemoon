@@ -35,10 +35,21 @@ button{background:#202544;color:#fff0ca;border-color:#c2b9eb55}button:hover{back
 @keyframes moonfall{0%{transform:translate(0,-40px) rotate(-15deg);opacity:0}10%,80%{opacity:.9}100%{transform:translate(-150px,calc(100vh + 160px)) rotate(25deg);opacity:0}}
 #fireworks{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 @media(prefers-reduced-motion:reduce){#fireworks{display:none}}
+
+[hidden]{display:none!important}
+#open-message{position:relative;z-index:3;width:min(78vw,350px);aspect-ratio:1;padding:0;margin:40px 0;border:0;background:transparent;border-radius:50%;filter:drop-shadow(0 0 35px #ffdf8b66);transition:transform .3s}
+#open-message:hover{background:transparent;transform:scale(1.04)}
+#open-message svg{width:100%;height:100%;display:block}
+#open-message span{position:absolute;inset:0;display:grid;place-content:center;color:#53401e;font-size:clamp(1.2rem,5vw,1.6rem);line-height:1.5;text-shadow:0 1px 8px #fff9}
+.moon-emoji{top:0;left:0;bottom:auto;opacity:.95;animation:none!important;will-change:transform}
+.moon-emoji:before{display:none}.moon-emoji span{animation:none}
+#message{animation:reveal .7s ease-out}
+@keyframes reveal{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){#message{animation:none}}
 </style>
 </head>
 <body>
-<audio id="background-music" src="oli.mp3" loop autoplay preload="auto"></audio>
+<audio id="background-music" src="oli.mp3" loop preload="auto"></audio>
 <svg class="sky" viewBox="0 0 1440 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <linearGradient id="moon-color" x2="1" y2="1"><stop stop-color="#fff5cf"/><stop offset="1" stop-color="#e9d8f1"/></linearGradient>
@@ -56,7 +67,10 @@ button{background:#202544;color:#fff0ca;border-color:#c2b9eb55}button:hover{back
 </svg>
 <div class="floating-moons" id="floating-moons" aria-hidden="true"></div>
 <canvas id="fireworks" aria-hidden="true"></canvas>
-<main>
+<button id="open-message" type="button" aria-controls="message" aria-expanded="false">
+<svg viewBox="0 0 300 300" aria-hidden="true"><defs><radialGradient id="welcome-moon"><stop stop-color="#fffde0"/><stop offset=".7" stop-color="#f8e5a4"/><stop offset="1" stop-color="#dfc987"/></radialGradient></defs><circle cx="150" cy="150" r="140" fill="url(#welcome-moon)"/><g fill="#b69b65" opacity=".2"><circle cx="85" cy="95" r="28"/><circle cx="210" cy="170" r="35"/><circle cx="110" cy="220" r="18"/><circle cx="200" cy="75" r="15"/></g></svg>
+<span>Dame click<br>para leer mensaje ✨</span></button>
+<main id="message" hidden tabindex="-1">
 <div class="little-moon" aria-hidden="true">🌙</div>
 <h1>Qué bonito coincidir contigo</h1>
 <p>Entre tantas aventuras en Aniimo, una de las cosas más bonitas ha sido conocerte. Me encanta jugar contigo, reírnos y descubrir cosas juntos; contigo, hasta una partida sencilla se convierte en un lindo recuerdo. Gracias por tu compañía y por hacer que siempre tenga ganas de volver a jugar. Espero que nos queden muchísimas aventuras y una amistad que siga creciendo dentro y fuera del juego. 🫶✨</p>
@@ -65,97 +79,81 @@ button{background:#202544;color:#fff0ca;border-color:#c2b9eb55}button:hover{back
 <span id="music-status" role="status"></span>
 </main>
 <script>
-const container=document.getElementById('floating-moons');
-const symbols=['🌙','🌛','🌜','🌕'];
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-function createMoon(initial=false){
- const moon=document.createElement('div'),symbol=document.createElement('span');
- const duration=5+Math.random()*5;
- moon.className='moon-emoji';symbol.textContent=symbols[Math.floor(Math.random()*symbols.length)];
- moon.style.left=Math.random()*100+'%';moon.style.fontSize=20+Math.random()*25+'px';
- moon.style.setProperty('--duration',duration+'s');
- if(initial)moon.style.animationDelay=-(Math.random()*duration)+'s';
- moon.appendChild(symbol);container.appendChild(moon);
- moon.addEventListener('animationend',()=>moon.remove(),{once:true});
-}
-let interval;
-function updateAnimation(){
- clearInterval(interval);container.replaceChildren();
- if(reduced.matches||document.hidden)return;
- for(let i=0;i<14;i++)createMoon(true);
- interval=setInterval(()=>createMoon(),650);
-}
-reduced.addEventListener('change',updateAnimation);
-document.addEventListener('visibilitychange',updateAnimation);updateAnimation();
 const audio=document.getElementById('background-music'),button=document.getElementById('music-button'),status=document.getElementById('music-status');
+const opener=document.getElementById('open-message'),message=document.getElementById('message');
 audio.volume=.45;
-function syncMusicButton(){
+function syncMusic(){
  button.textContent=audio.paused?'🎵 Reproducir música':'⏸ Pausar música';
  button.setAttribute('aria-pressed',String(!audio.paused));
 }
-audio.addEventListener('play',syncMusicButton);
-audio.addEventListener('pause',syncMusicButton);
-async function startMusic(){
- try{await audio.play();status.textContent='';return true}
- catch{status.textContent='Toca la página para escuchar la música.';return false}
-}
-async function unlockMusic(event){
- if(event.target.closest('button'))return;
- if(await startMusic()){
-  document.removeEventListener('pointerdown',unlockMusic);
-  document.removeEventListener('keydown',unlockMusic);
- }
-}
-document.addEventListener('pointerdown',unlockMusic);
-document.addEventListener('keydown',unlockMusic);
-startMusic();
-button.addEventListener('click',async()=>{
- if(!audio.paused){audio.pause();button.textContent='🎵 Reproducir música';button.setAttribute('aria-pressed','false');return}
- try{await audio.play();button.textContent='⏸ Pausar música';button.setAttribute('aria-pressed','true');status.textContent=''}
- catch{status.textContent='No se pudo reproducir la música. Comprueba que oli.mp3 esté disponible.'}
+audio.addEventListener('play',syncMusic);audio.addEventListener('pause',syncMusic);
+function playMusic(){return audio.play().then(()=>{status.textContent=''}).catch(()=>{status.textContent='Pulsa reproducir música para volver a intentarlo.'})}
+opener.addEventListener('click',()=>{
+ playMusic();opener.setAttribute('aria-expanded','true');opener.hidden=true;
+ message.hidden=false;message.focus({preventScroll:true});
+ if(!reduced.matches)burst(innerWidth/2,innerHeight/2,64);
 });
+button.addEventListener('click',()=>{if(audio.paused)playMusic();else audio.pause()});
 
-/* Estrellas y destellos: lienzo independiente, sin bloquear los controles. */
+// Cada luna tiene posición y velocidad propias; sus chispas tienen gravedad,
+// resistencia del aire, rebote en el borde inferior y tiempo de vida limitado.
+const container=document.getElementById('floating-moons');
 const canvas=document.getElementById('fireworks'),ctx=canvas.getContext('2d');
-let width=innerWidth,height=innerHeight,stars=[],sparks=[],frame,last=0,nextBurst=0;
+const symbols=['🌙','🌛','🌜','🌕'];
+let width=innerWidth,height=innerHeight,stars=[],moons=[],sparks=[],frame,last=0,spawn=0,nextBurst=0;
 function resizeSky(){
- width=innerWidth;height=innerHeight;
- const ratio=Math.min(devicePixelRatio||1,2);
+ width=innerWidth;height=innerHeight;const ratio=Math.min(devicePixelRatio||1,2);
  canvas.width=width*ratio;canvas.height=height*ratio;ctx.setTransform(ratio,0,0,ratio,0,0);
  stars=Array.from({length:90},()=>({x:Math.random()*width,y:Math.random()*height,r:.4+Math.random()*1.3,phase:Math.random()*7}));
 }
-function burst(){
- const x=width*(.08+Math.random()*.84),y=height*(.08+Math.random()*.65);
- const hue=[42,265,195,320][Math.floor(Math.random()*4)];
- for(let i=0;i<32;i++){
-  const angle=Math.PI*2*i/32,speed=35+Math.random()*80;
-  sparks.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:1.4+Math.random()*.6,age:0,hue});
- }
+function spark(x,y,vx,vy,hue=43){
+ if(sparks.length>=700)return;
+ sparks.push({x,y,vx,vy,age:0,life:.7+Math.random()*1.1,hue});
+}
+function burst(x=Math.random()*width,y=height*(.1+Math.random()*.5),count=32){
+ const hue=[43,265,195,320][Math.floor(Math.random()*4)];
+ for(let i=0;i<count;i++){const angle=Math.PI*2*i/count,speed=40+Math.random()*130;spark(x,y,Math.cos(angle)*speed,Math.sin(angle)*speed,hue)}
+}
+function createMoon(initial=false){
+ const el=document.createElement('div');el.className='moon-emoji';
+ el.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+ const size=22+Math.random()*24;el.style.fontSize=size+'px';container.appendChild(el);
+ const moon={el,x:Math.random()*width,y:initial?Math.random()*height:-65,vx:-12+Math.random()*24,vy:50+Math.random()*60,size,angle:Math.random(),spin:(Math.random()-.5)*.6,trail:0};
+ el.style.transform='translate('+moon.x+'px,'+moon.y+'px)';moons.push(moon);
 }
 function drawSky(time){
- const dt=Math.min((time-last)/1000,.04);last=time;
- ctx.clearRect(0,0,width,height);
+ const dt=Math.min((time-last)/1000,.04);last=time;ctx.clearRect(0,0,width,height);
  for(const star of stars){
-  ctx.globalAlpha=.35+.55*(.5+.5*Math.sin(time/1000+star.phase));
-  ctx.fillStyle='#fff1d0';ctx.beginPath();ctx.arc(star.x,star.y,star.r,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=.4+.5*(.5+.5*Math.sin(time/1000+star.phase));ctx.fillStyle='#fff1d0';
+  ctx.beginPath();ctx.arc(star.x,star.y,star.r,0,Math.PI*2);ctx.fill();
  }
- if(time>nextBurst){burst();nextBurst=time+1100+Math.random()*1300}
+ spawn+=dt;if(spawn>.3){createMoon();spawn=0}
+ for(const moon of moons){
+  moon.vy=Math.min(moon.vy+5*dt,145);moon.x+=moon.vx*dt;moon.y+=moon.vy*dt;moon.angle+=moon.spin*dt;
+  moon.el.style.transform='translate('+moon.x+'px,'+moon.y+'px) rotate('+moon.angle+'rad)';
+  moon.trail+=dt;
+  if(moon.trail>.055){spark(moon.x+moon.size/2,moon.y+moon.size/2,(Math.random()-.5)*55,-25-Math.random()*45);moon.trail=0}
+  if(moon.y>height+65){moon.el.remove();moon.dead=true}
+ }
+ moons=moons.filter(m=>!m.dead);
+ if(time>nextBurst){burst();nextBurst=time+1800+Math.random()*1200}
  ctx.globalCompositeOperation='lighter';
- sparks=sparks.filter(p=>p.age<p.life);
  for(const p of sparks){
-  p.age+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=20*dt;
-  ctx.globalAlpha=Math.max(0,1-p.age/p.life);
-  ctx.strokeStyle='hsl('+p.hue+' 95% 78%)';ctx.lineWidth=1.5;
-  ctx.shadowBlur=9;ctx.shadowColor=ctx.strokeStyle;
-  ctx.beginPath();ctx.moveTo(p.x-p.vx*.035,p.y-p.vy*.035);ctx.lineTo(p.x,p.y);ctx.stroke();
+  p.age+=dt;p.vx*=Math.exp(-.65*dt);p.vy+=95*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
+  if(p.y>height-3&&p.vy>0){p.y=height-3;p.vy*=-.4;p.vx*=.7}
+  ctx.globalAlpha=Math.max(0,1-p.age/p.life);ctx.strokeStyle='hsl('+p.hue+' 95% 78%)';
+  ctx.lineWidth=1.6;ctx.shadowBlur=8;ctx.shadowColor=ctx.strokeStyle;
+  ctx.beginPath();ctx.moveTo(p.x-p.vx*.035,p.y-p.vy*.035);ctx.lineTo(p.x+1,p.y+1);ctx.stroke();
  }
- ctx.shadowBlur=0;ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+ sparks=sparks.filter(p=>p.age<p.life);ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
  frame=requestAnimationFrame(drawSky);
 }
 function animateSky(){
- cancelAnimationFrame(frame);ctx.clearRect(0,0,width,height);
+ cancelAnimationFrame(frame);container.replaceChildren();moons=[];sparks=[];ctx.clearRect(0,0,width,height);
  if(reduced.matches||document.hidden)return;
- last=performance.now();nextBurst=last+400;frame=requestAnimationFrame(drawSky);
+ for(let i=0;i<22;i++)createMoon(true);
+ last=performance.now();spawn=0;nextBurst=last+1000;frame=requestAnimationFrame(drawSky);
 }
 addEventListener('resize',resizeSky);reduced.addEventListener('change',animateSky);
 document.addEventListener('visibilitychange',animateSky);resizeSky();animateSky();
