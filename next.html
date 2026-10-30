@@ -47,6 +47,11 @@ button{background:#202544;color:#fff0ca;border-color:#c2b9eb55}button:hover{back
 @keyframes reveal{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){#message{animation:none}}
 .floating-moons{z-index:3}#open-message{z-index:4}main{z-index:4}
+
+/* Evita desenfoques por elemento y sobre el contenido animado. */
+.moon-emoji{filter:none!important;text-shadow:0 0 5px #ffe4a466;will-change:auto}
+main{backdrop-filter:none}
+.cloud{animation:none}
 </style>
 </head>
 <body>
@@ -93,7 +98,7 @@ function playMusic(){return audio.play().then(()=>{status.textContent=''}).catch
 opener.addEventListener('click',()=>{
  playMusic();opener.setAttribute('aria-expanded','true');opener.hidden=true;
  message.hidden=false;message.focus({preventScroll:true});
- if(!reduced.matches)burst(innerWidth/2,innerHeight/2,64);
+ if(!reduced.matches)burst(innerWidth/2,innerHeight/2,28);
 });
 button.addEventListener('click',()=>{if(audio.paused)playMusic();else audio.pause()});
 
@@ -102,21 +107,26 @@ button.addEventListener('click',()=>{if(audio.paused)playMusic();else audio.paus
 const container=document.getElementById('floating-moons');
 const canvas=document.getElementById('fireworks'),ctx=canvas.getContext('2d');
 const symbols=['🌙','🌛','🌜','🌕'];
+const glow=document.createElement('canvas');glow.width=24;glow.height=24;
+const glowContext=glow.getContext('2d'),glowGradient=glowContext.createRadialGradient(12,12,0,12,12,12);
+glowGradient.addColorStop(0,'#fff8dc');glowGradient.addColorStop(.25,'#ffe6a899');glowGradient.addColorStop(1,'#ffe6a800');
+glowContext.fillStyle=glowGradient;glowContext.fillRect(0,0,24,24);
 let width=innerWidth,height=innerHeight,stars=[],moons=[],sparks=[],frame,last=0,spawn=0,nextBurst=0;
 function resizeSky(){
- width=innerWidth;height=innerHeight;const ratio=Math.min(devicePixelRatio||1,2);
+ width=innerWidth;height=innerHeight;const ratio=1;
  canvas.width=width*ratio;canvas.height=height*ratio;ctx.setTransform(ratio,0,0,ratio,0,0);
- stars=Array.from({length:90},()=>({x:Math.random()*width,y:Math.random()*height,r:.4+Math.random()*1.3,phase:Math.random()*7}));
+ stars=Array.from({length:45},()=>({x:Math.random()*width,y:Math.random()*height,r:.4+Math.random()*1.3,phase:Math.random()*7}));
 }
 function spark(x,y,vx,vy,hue=43){
- if(sparks.length>=700)return;
+ if(sparks.length>=120)return;
  sparks.push({x,y,vx,vy,age:0,life:.7+Math.random()*1.1,hue});
 }
-function burst(x=Math.random()*width,y=height*(.1+Math.random()*.5),count=32){
+function burst(x=Math.random()*width,y=height*(.1+Math.random()*.5),count=18){
  const hue=[43,265,195,320][Math.floor(Math.random()*4)];
  for(let i=0;i<count;i++){const angle=Math.PI*2*i/count,speed=40+Math.random()*130;spark(x,y,Math.cos(angle)*speed,Math.sin(angle)*speed,hue)}
 }
 function createMoon(initial=false){
+ if(moons.length>=18)return;
  const el=document.createElement('div');el.className='moon-emoji';
  el.textContent=symbols[Math.floor(Math.random()*symbols.length)];
  const size=30+Math.random()*24;el.style.fontSize=size+'px';container.appendChild(el);
@@ -124,17 +134,18 @@ function createMoon(initial=false){
  el.style.transform='translate('+moon.x+'px,'+moon.y+'px)';moons.push(moon);
 }
 function drawSky(time){
- const dt=Math.min((time-last)/1000,.04);last=time;ctx.clearRect(0,0,width,height);
+ if(time-last<1000/30){frame=requestAnimationFrame(drawSky);return}
+ const dt=Math.min((time-last)/1000,.1);last=time;ctx.clearRect(0,0,width,height);
  for(const star of stars){
   ctx.globalAlpha=.4+.5*(.5+.5*Math.sin(time/1000+star.phase));ctx.fillStyle='#fff1d0';
   ctx.beginPath();ctx.arc(star.x,star.y,star.r,0,Math.PI*2);ctx.fill();
  }
- spawn+=dt;if(spawn>.22){createMoon();spawn=0}
+ spawn+=dt;if(spawn>.6){createMoon();spawn=0}
  for(const moon of moons){
   moon.vy=Math.min(moon.vy+5*dt,145);moon.x+=moon.vx*dt;moon.y+=moon.vy*dt;moon.angle+=moon.spin*dt;
   moon.el.style.transform='translate('+moon.x+'px,'+moon.y+'px) rotate('+moon.angle+'rad)';
   moon.trail+=dt;
-  if(moon.trail>.055){spark(moon.x+moon.size/2,moon.y+moon.size/2,(Math.random()-.5)*55,-25-Math.random()*45);moon.trail=0}
+  if(moon.trail>.18){spark(moon.x+moon.size/2,moon.y+moon.size/2,(Math.random()-.5)*55,-25-Math.random()*45);moon.trail=0}
   if(moon.y>height+65){moon.el.remove();moon.dead=true}
  }
  moons=moons.filter(m=>!m.dead);
@@ -144,7 +155,8 @@ function drawSky(time){
   p.age+=dt;p.vx*=Math.exp(-.65*dt);p.vy+=95*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
   if(p.y>height-3&&p.vy>0){p.y=height-3;p.vy*=-.4;p.vx*=.7}
   ctx.globalAlpha=Math.max(0,1-p.age/p.life);ctx.strokeStyle='hsl('+p.hue+' 95% 78%)';
-  ctx.lineWidth=1.6;ctx.shadowBlur=8;ctx.shadowColor=ctx.strokeStyle;
+  ctx.lineWidth=2;
+  ctx.drawImage(glow,p.x-6,p.y-6,12,12);
   ctx.beginPath();ctx.moveTo(p.x-p.vx*.035,p.y-p.vy*.035);ctx.lineTo(p.x+1,p.y+1);ctx.stroke();
  }
  sparks=sparks.filter(p=>p.age<p.life);ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
@@ -153,7 +165,7 @@ function drawSky(time){
 function animateSky(){
  cancelAnimationFrame(frame);container.replaceChildren();moons=[];sparks=[];ctx.clearRect(0,0,width,height);
  if(document.hidden)return;
- for(let i=0;i<38;i++)createMoon(true);
+ for(let i=0;i<16;i++)createMoon(true);
  last=performance.now();spawn=0;nextBurst=last+1000;frame=requestAnimationFrame(drawSky);
 }
 addEventListener('resize',resizeSky);reduced.addEventListener('change',animateSky);
